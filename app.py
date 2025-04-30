@@ -312,7 +312,10 @@ with col2:
             # Display a preview of the first page
             pdf_parts = input_pdf_setup(uploaded_file)
             st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-            st.image(pdf_parts[0]["data"], width=300, caption="Resume Preview")
+            # Decode base64 image for display
+            image_data = base64.b64decode(pdf_parts[0]["data"])
+            image = Image.open(io.BytesIO(image_data))
+            st.image(image, width=300, caption="Resume Preview")
             st.markdown('</div>', unsafe_allow_html=True)
         except Exception as e:
             st.warning(f"Could not preview resume: {str(e)}")
