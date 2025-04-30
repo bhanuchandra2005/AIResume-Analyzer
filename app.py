@@ -5,6 +5,7 @@ import base64
 import streamlit as st
 import os
 import io
+import platform
 from PIL import Image 
 import pdf2image
 import google.generativeai as genai
@@ -219,11 +220,19 @@ def get_gemini_response(input,pdf_content,prompt):
 def input_pdf_setup(uploaded_file):
     if uploaded_file is not None:
         ## Convert the PDF to image
-        # Define poppler path - adjust this to your actual installation path
-        poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-        
-        # Explicitly provide the poppler_path
-        images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
+        # Different handling for Windows vs Linux/Cloud environments
+        if platform.system() == "Windows":
+            # Windows-specific path
+            poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+            images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
+        else:
+            # For Linux/Cloud environments where poppler is installed globally
+            try:
+                images = pdf2image.convert_from_bytes(uploaded_file.read())
+            except Exception as e:
+                st.error(f"PDF conversion error: {str(e)}")
+                st.info("If running on Render, make sure to add poppler-utils in the build command: 'apt-get update && apt-get install -y poppler-utils'")
+                raise
 
         first_page=images[0]
 
@@ -284,8 +293,13 @@ with col2:
         st.success("✅ Resume uploaded successfully!")
         try:
             # Display a preview of the first page
-            poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-            images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
+            if platform.system() == "Windows":
+                poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+                images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
+            else:
+                # For Linux/Cloud environments
+                images = pdf2image.convert_from_bytes(uploaded_file.getvalue())
+                
             st.markdown('<div class="preview-box">', unsafe_allow_html=True)
             st.image(images[0], width=300, caption="Resume Preview")
             st.markdown('</div>', unsafe_allow_html=True)
