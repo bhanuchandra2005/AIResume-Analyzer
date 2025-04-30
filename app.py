@@ -218,53 +218,27 @@ def get_gemini_response(input,pdf_content,prompt):
 
 def input_pdf_setup(uploaded_file):
     if uploaded_file is not None:
-        try:
-            ## Convert the PDF to image
-            # Try to use pdf2image with poppler if available
-            try:
-                # For local development with poppler installed
-                poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-                images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
-            except Exception:
-                # For cloud deployment without poppler
-                import PyPDF2
-                from PIL import Image
-                
-                # Read the PDF content
-                pdf_reader = PyPDF2.PdfReader(uploaded_file)
-                # For simplicity, we'll just use the text content for cloud deployment
-                pdf_text = ""
-                for page in pdf_reader.pages:
-                    pdf_text += page.extract_text()
-                
-                # Create a blank image with the text
-                img = Image.new('RGB', (800, 1000), color = (255, 255, 255))
-                from PIL import ImageDraw
-                draw = ImageDraw.Draw(img)
-                draw.text((50, 50), "Resume Preview\n(Text extracted for analysis)", fill=(0, 0, 0))
-                # Only show first 300 chars of text as preview
-                preview_text = pdf_text[:300] + "..." if len(pdf_text) > 300 else pdf_text
-                draw.text((50, 100), preview_text, fill=(0, 0, 0))
-                
-                images = [img]  # Use this simple image for preview
-            
-            first_page = images[0]
+        ## Convert the PDF to image
+        # Define poppler path - adjust this to your actual installation path
+        poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+        
+        # Explicitly provide the poppler_path
+        images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
 
-            # Convert to bytes
-            img_byte_arr = io.BytesIO()
-            first_page.save(img_byte_arr, format='JPEG')
-            img_byte_arr = img_byte_arr.getvalue()
+        first_page=images[0]
 
-            pdf_parts = [
-                {
-                    "mime_type": "image/jpeg",
-                    "data": base64.b64encode(img_byte_arr).decode()  # encode to base64
-                }
-            ]
-            return pdf_parts
-        except Exception as e:
-            st.error(f"Error processing PDF: {str(e)}")
-            raise e
+        # Convert to bytes
+        img_byte_arr = io.BytesIO()
+        first_page.save(img_byte_arr, format='JPEG')
+        img_byte_arr = img_byte_arr.getvalue()
+
+        pdf_parts = [
+            {
+                "mime_type": "image/jpeg",
+                "data": base64.b64encode(img_byte_arr).decode()  # encode to base64
+            }
+        ]
+        return pdf_parts
     else:
         raise FileNotFoundError("No file uploaded")
 
@@ -310,12 +284,10 @@ with col2:
         st.success("✅ Resume uploaded successfully!")
         try:
             # Display a preview of the first page
-            pdf_parts = input_pdf_setup(uploaded_file)
+            poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+            images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
             st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-            # Decode base64 image for display
-            image_data = base64.b64decode(pdf_parts[0]["data"])
-            image = Image.open(io.BytesIO(image_data))
-            st.image(image, width=300, caption="Resume Preview")
+            st.image(images[0], width=300, caption="Resume Preview")
             st.markdown('</div>', unsafe_allow_html=True)
         except Exception as e:
             st.warning(f"Could not preview resume: {str(e)}")
@@ -360,16 +332,16 @@ if submit1 or submit3:
     else:
         with st.spinner("Analyzing your resume... This may take a few moments."):
             try:
-                pdf_parts = input_pdf_setup(uploaded_file)
+                pdf_content = input_pdf_setup(uploaded_file)
                 
                 st.markdown('<div class="result-section">', unsafe_allow_html=True)
                 st.markdown('<div class="sub-header">Analysis Results</div>', unsafe_allow_html=True)
                 
                 if submit1:
-                    response = get_gemini_response(input_prompt1, pdf_parts, input_text)
+                    response = get_gemini_response(input_prompt1, pdf_content, input_text)
                     st.markdown("### Resume Evaluation")
                 elif submit3:
-                    response = get_gemini_response(input_prompt3, pdf_parts, input_text)
+                    response = get_gemini_response(input_prompt3, pdf_content, input_text)
                     st.markdown("### Match Assessment")
                 
                 st.markdown(response)
