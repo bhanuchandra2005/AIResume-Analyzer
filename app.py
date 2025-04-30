@@ -55,7 +55,7 @@ st.markdown("""
         color: var(--primary-color);
         font-weight: 600;
         margin-top: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid var(--border-color);
     }
@@ -170,6 +170,7 @@ st.markdown("""
         border: 2px dashed var(--border-color);
         border-radius: 8px;
         padding: 1rem;
+        margin-top: 10px;
     }
     
     .stFileUploader:hover {
@@ -277,7 +278,6 @@ with col1:
 
 with col2:
     st.markdown('<div class="sub-header">Your Resume</div>', unsafe_allow_html=True)
-    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Upload your resume (PDF format)", type=["pdf"])
     
     if uploaded_file is not None:
@@ -291,7 +291,6 @@ with col2:
             st.markdown('</div>', unsafe_allow_html=True)
         except Exception as e:
             st.warning(f"Could not preview resume: {str(e)}")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Action buttons in a centered layout
 st.markdown("<br>", unsafe_allow_html=True)
