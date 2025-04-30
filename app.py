@@ -361,24 +361,24 @@ with footer_container:
         st.markdown("<p style='text-align: center; color: #718096; font-size: 0.9rem;'>This tool uses advanced AI to analyze resumes against job descriptions and provide actionable feedback.</p>", unsafe_allow_html=True)
     
     # Mentor section - moved above team members
-    st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 20px; font-size: 1.1rem;'>Mentor</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 20px; font-size: 1.1rem;'>PROJECT GUIDE</h4>", unsafe_allow_html=True)
     
     mentor_col1, mentor_col2, mentor_col3 = st.columns([1, 1, 1])
     with mentor_col2:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>Prathiba Swaraj</p><p style='color: #718096; font-size: 0.8rem;'>Project Mentor</p></div>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>P. PRATHIBHA SWARAJ</p><p style='color: #718096; font-size: 0.8rem;'>ASSISTANT PROFESSOR</p></div>", unsafe_allow_html=True)
     
     # Team section - after mentor
     st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 20px; font-size: 1.1rem;'>Team Members</h4>", unsafe_allow_html=True)
     
     team_cols = st.columns(3)
     with team_cols[0]:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>Srakshin Chityala</p><p style='color: #718096; font-size: 0.8rem;'>Roll No: 23241A3321</p></div>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>BHANU CHANDRA MEGHARAJ</p><p style='color: #718096; font-size: 0.8rem;'>23241A3338</p></div>", unsafe_allow_html=True)
     
     with team_cols[1]:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>Bhanu Chandra Megharaj</p><p style='color: #718096; font-size: 0.8rem;'>Roll No: 23241A3338</p></div>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>SRAKSHIN CHITYALA</p><p style='color: #718096; font-size: 0.8rem;'>23241A3321</p></div>", unsafe_allow_html=True)
     
     with team_cols[2]:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>Akshaj</p><p style='color: #718096; font-size: 0.8rem;'>Roll No: 23241A3303</p></div>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>AKSHAJ REDDY ADDANDI</p><p style='color: #718096; font-size: 0.8rem;'>23241A3303</p></div>", unsafe_allow_html=True)
     
     # Copyright - removed links section
     col1, col2, col3 = st.columns([1, 2, 1])
