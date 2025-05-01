@@ -11,25 +11,6 @@ import pdf2image
 import google.generativeai as genai
 import datetime
 
-# Display debugging info at the start
-try:
-    st.sidebar.write("### Environment Info")
-    st.sidebar.write(f"Platform: {platform.system()}")
-    st.sidebar.write(f"Python: {platform.python_version()}")
-    
-    # Check poppler installation
-    import subprocess
-    try:
-        result = subprocess.run(['pdftoppm', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        st.sidebar.write(f"Poppler: {result.stderr.strip()}")
-    except Exception as e:
-        st.sidebar.write(f"Poppler: Not found - {str(e)}")
-    
-    # Check pdf2image version
-    st.sidebar.write(f"pdf2image version: {pdf2image.__version__}")
-except Exception as e:
-    st.sidebar.write(f"Error getting env info: {str(e)}")
-
 # Page configuration
 st.set_page_config(
     page_title="Resume AI Analyzer",
@@ -240,43 +221,18 @@ def input_pdf_setup(uploaded_file):
     if uploaded_file is not None:
         ## Convert the PDF to image
         # Different handling for Windows vs Linux/Cloud environments
-        try:
-            if platform.system() == "Windows":
-                # Windows-specific path
-                poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-                st.write("Using Windows Poppler path")
-                images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
-            else:
-                # For Linux/Cloud environments where poppler is installed globally
-                st.write("Using Linux/Cloud environment setup")
-                try:
-                    # Try with auto-detection first
-                    images = pdf2image.convert_from_bytes(uploaded_file.read())
-                except Exception as e:
-                    st.error(f"Standard conversion failed: {str(e)}")
-                    # Try without specific path settings as fallback
-                    st.write("Attempting fallback conversion method...")
-                    try:
-                        # Reset file pointer
-                        uploaded_file.seek(0)
-                        # Try with pdftoppm directly
-                        images = pdf2image.convert_from_bytes(uploaded_file.read(), use_pdftoppm=True, use_cropbox=True)
-                    except Exception as e2:
-                        st.error(f"Fallback conversion also failed: {str(e2)}")
-                        st.info("If running on Streamlit, make sure to add 'poppler-utils' in packages.txt")
-                        raise Exception(f"PDF conversion failed with both methods: {str(e)} and {str(e2)}")
-        except Exception as e:
-            st.error(f"PDF conversion error: {str(e)}")
-            import subprocess
+        if platform.system() == "Windows":
+            # Windows-specific path
+            poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+            images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
+        else:
+            # For Linux/Cloud environments where poppler is installed globally
             try:
-                # Check if poppler is installed and available
-                result = subprocess.run(['pdftoppm', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                st.info(f"Poppler check: {result.stderr.decode()}")
-            except Exception as e2:
-                st.error(f"Poppler not found: {str(e2)}")
-            
-            st.info("If running on Streamlit, ensure 'poppler-utils' is properly installed via packages.txt")
-            raise
+                images = pdf2image.convert_from_bytes(uploaded_file.read())
+            except Exception as e:
+                st.error(f"PDF conversion error: {str(e)}")
+                st.info("If running on Render, make sure to add poppler-utils in the build command: 'apt-get update && apt-get install -y poppler-utils'")
+                raise
 
         first_page=images[0]
 
@@ -337,27 +293,18 @@ with col2:
         st.success("✅ Resume uploaded successfully!")
         try:
             # Display a preview of the first page
-            try:
-                if platform.system() == "Windows":
-                    poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-                    images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
-                else:
-                    # For Linux/Cloud environments
-                    try:
-                        images = pdf2image.convert_from_bytes(uploaded_file.getvalue())
-                    except Exception as e:
-                        st.write("Standard preview failed, trying alternative method...")
-                        uploaded_file.seek(0)
-                        images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), use_pdftoppm=True, use_cropbox=True)
+            if platform.system() == "Windows":
+                poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+                images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
+            else:
+                # For Linux/Cloud environments
+                images = pdf2image.convert_from_bytes(uploaded_file.getvalue())
                 
-                st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-                st.image(images[0], width=300, caption="Resume Preview")
-                st.markdown('</div>', unsafe_allow_html=True)
-            except Exception as e:
-                st.warning(f"Could not preview resume: {str(e)}")
-                st.info("PDF preview not available, but you can still analyze the file")
-        except Exception as outer_e:
-            st.error(f"Error handling PDF: {str(outer_e)}")
+            st.markdown('<div class="preview-box">', unsafe_allow_html=True)
+            st.image(images[0], width=300, caption="Resume Preview")
+            st.markdown('</div>', unsafe_allow_html=True)
+        except Exception as e:
+            st.warning(f"Could not preview resume: {str(e)}")
 
 # Action buttons in a centered layout
 st.markdown("<br>", unsafe_allow_html=True)
