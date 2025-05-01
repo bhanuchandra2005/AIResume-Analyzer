@@ -6,12 +6,14 @@ import streamlit as st
 import os
 import io
 import platform
+import subprocess
 from PIL import Image 
 import pdf2image
 import google.generativeai as genai
 import datetime
 import PyPDF2
 import tempfile
+import sys
 
 # Page configuration
 st.set_page_config(
@@ -201,6 +203,55 @@ else:
     # Fallback to hardcoded key if environment variable is not set
     genai.configure(api_key="AIzaSyDydWxM_3IoML4ZPSe-YAlBQOZvXGCz8PI")
 
+def check_poppler_installation():
+    """Check if poppler is installed and return its version and possible paths."""
+    paths_to_check = [
+        # Standard system paths
+        "/usr/bin/pdftoppm",
+        "/usr/local/bin/pdftoppm",
+        # Potential Streamlit Cloud paths
+        "/home/appuser/.conda/bin/pdftoppm",
+        "/app/.apt/usr/bin/pdftoppm"
+    ]
+    
+    results = {
+        "found": False,
+        "version": None,
+        "path": None,
+        "paths_checked": paths_to_check
+    }
+    
+    # First try which command (should work on Unix systems)
+    try:
+        path = subprocess.check_output(["which", "pdftoppm"], text=True).strip()
+        if path:
+            results["found"] = True
+            results["path"] = path
+            # Try to get version
+            try:
+                version = subprocess.check_output([path, "-v"], stderr=subprocess.STDOUT, text=True).strip()
+                results["version"] = version
+            except:
+                pass
+            return results
+    except:
+        # which command failed, continue checking specific paths
+        pass
+        
+    # Check each potential path
+    for path in paths_to_check:
+        if os.path.exists(path):
+            results["found"] = True
+            results["path"] = path
+            try:
+                version = subprocess.check_output([path, "-v"], stderr=subprocess.STDOUT, text=True).strip()
+                results["version"] = version
+            except:
+                pass
+            break
+    
+    return results
+
 def get_gemini_response(input, pdf_content, prompt):
     model = genai.GenerativeModel('gemini-1.5-flash')
     
@@ -234,14 +285,34 @@ def input_pdf_setup(uploaded_file):
         try:
             ## First try with pdf2image and poppler
             try:
+                # Check poppler installation - might be useful for debugging
+                poppler_info = check_poppler_installation()
+                
+                # Save PDF to a temporary file (sometimes helps with cloud environments)
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+                    temp_pdf.write(uploaded_file.read())
+                    temp_pdf_path = temp_pdf.name
+                
                 # Different handling for Windows vs Linux/Cloud environments
                 if platform.system() == "Windows":
                     # Windows-specific path
                     poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-                    images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
+                    images = pdf2image.convert_from_path(temp_pdf_path, poppler_path=poppler_path)
                 else:
                     # For Linux/Cloud environments where poppler is installed globally
-                    images = pdf2image.convert_from_bytes(uploaded_file.read())
+                    # Try using the path we found if any
+                    if poppler_info["found"]:
+                        poppler_path = os.path.dirname(poppler_info["path"])
+                        images = pdf2image.convert_from_path(
+                            temp_pdf_path,
+                            poppler_path=poppler_path
+                        )
+                    else:
+                        # Standard approach
+                        images = pdf2image.convert_from_path(temp_pdf_path)
+                
+                # Clean up the temporary file
+                os.unlink(temp_pdf_path)
                 
                 first_page = images[0]
                 
@@ -260,6 +331,22 @@ def input_pdf_setup(uploaded_file):
             
             except Exception as e:
                 st.warning(f"PDF image conversion failed: {str(e)}. Using text extraction instead.")
+                
+                # Debug information - display in an expander
+                with st.expander("Technical Details (for debugging)"):
+                    st.write("### System Information")
+                    st.write(f"Platform: {platform.platform()}")
+                    st.write(f"Python version: {sys.version}")
+                    
+                    st.write("### Poppler Check Results")
+                    poppler_info = check_poppler_installation()
+                    st.write(f"Poppler found: {poppler_info['found']}")
+                    st.write(f"Poppler path: {poppler_info['path']}")
+                    st.write(f"Poppler version: {poppler_info['version']}")
+                    st.write("Paths checked:")
+                    for path in poppler_info['paths_checked']:
+                        st.write(f"- {path} (exists: {os.path.exists(path)})")
+                
                 # Fallback to text extraction
                 uploaded_file.seek(0)  # Reset file pointer
                 text = extract_text_with_pypdf2(uploaded_file)
@@ -316,18 +403,36 @@ with col2:
         try:
             # Try to display a preview
             try:
+                # Save PDF to a temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+                    temp_pdf.write(uploaded_file.getvalue())
+                    temp_pdf_path = temp_pdf.name
+                
+                # Check poppler and get path
+                poppler_info = check_poppler_installation()
+                
                 if platform.system() == "Windows":
                     poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-                    images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
-                    st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-                    st.image(images[0], width=300, caption="Resume Preview")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    images = pdf2image.convert_from_path(temp_pdf_path, poppler_path=poppler_path)
                 else:
                     # For Linux/Cloud environments
-                    images = pdf2image.convert_from_bytes(uploaded_file.getvalue())
-                    st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-                    st.image(images[0], width=300, caption="Resume Preview")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    if poppler_info["found"]:
+                        poppler_path = os.path.dirname(poppler_info["path"])
+                        images = pdf2image.convert_from_path(
+                            temp_pdf_path,
+                            poppler_path=poppler_path
+                        )
+                    else:
+                        # Standard approach
+                        images = pdf2image.convert_from_path(temp_pdf_path)
+                
+                # Clean up
+                os.unlink(temp_pdf_path)
+                
+                st.markdown('<div class="preview-box">', unsafe_allow_html=True)
+                st.image(images[0], width=300, caption="Resume Preview")
+                st.markdown('</div>', unsafe_allow_html=True)
+                
             except Exception as e:
                 st.warning("Could not display PDF preview. Using text mode for analysis.")
                 # Show a text preview instead
