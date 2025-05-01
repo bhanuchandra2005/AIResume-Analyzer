@@ -201,9 +201,24 @@ else:
     # Fallback to hardcoded key if environment variable is not set
     genai.configure(api_key="AIzaSyDydWxM_3IoML4ZPSe-YAlBQOZvXGCz8PI")
 
-def get_gemini_response(input,pdf_content,prompt):
-    model=genai.GenerativeModel('gemini-1.5-flash')
-    response=model.generate_content([input,pdf_content[0],prompt])
+def get_gemini_response(input, pdf_content, prompt):
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    # If pdf_content is a dictionary with 'text' key, it's our text fallback
+    if isinstance(pdf_content, dict) and 'text' in pdf_content:
+        # Include the text directly in the prompt
+        text_prompt = f"""Resume content:
+{pdf_content['text']}
+
+Job Description:
+{prompt}
+
+{input}"""
+        response = model.generate_content(text_prompt)
+    else:
+        # Normal flow with image
+        response = model.generate_content([input, pdf_content[0], prompt])
+    
     return response.text
 
 def extract_text_with_pypdf2(uploaded_file):
@@ -249,13 +264,8 @@ def input_pdf_setup(uploaded_file):
                 uploaded_file.seek(0)  # Reset file pointer
                 text = extract_text_with_pypdf2(uploaded_file)
                 
-                pdf_parts = [
-                    {
-                        "mime_type": "text/plain",
-                        "data": text
-                    }
-                ]
-                return pdf_parts
+                # Return the text directly in a special format for our modified get_gemini_response
+                return {'text': text}
                 
         except Exception as e:
             st.error(f"PDF processing error: {str(e)}")
@@ -379,6 +389,12 @@ if submit1 or submit3:
                 st.markdown('<div class="result-section">', unsafe_allow_html=True)
                 st.markdown('<div class="sub-header">Analysis Results</div>', unsafe_allow_html=True)
                 
+                # Display analysis mode (image or text)
+                if isinstance(pdf_content, dict) and 'text' in pdf_content:
+                    st.info("Using text-based analysis mode")
+                else:
+                    st.info("Using image-based analysis mode")
+                
                 if submit1:
                     response = get_gemini_response(input_prompt1, pdf_content, input_text)
                     st.markdown("### Resume Evaluation")
@@ -390,6 +406,7 @@ if submit1 or submit3:
                 st.markdown('</div>', unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"An error occurred during analysis: {str(e)}")
+                st.error("If this issue persists, please try a different PDF file format or reach out for support.")
 
 # Simple footer
 st.markdown("<hr>", unsafe_allow_html=True)
