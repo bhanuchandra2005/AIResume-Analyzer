@@ -220,12 +220,10 @@ st.markdown("""
     
     /* Info message */
     .stInfo {
-        background-color: rgba(191, 219, 254, 0.8);
-        color: #1E40AF;
-        border: 1px solid rgba(147, 197, 253, 0.5);
-        border-radius: 12px;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        background-color: rgba(49, 70, 101, 0.6) !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+        border: none !important;
+        border-radius: 8px !important;
     }
     
     /* Warning message */
@@ -264,17 +262,34 @@ st.markdown("""
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
     }
     
-    /* Result section styling */
-    .result-section {
-        background-color: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        padding: 2rem;
-        border-radius: 16px;
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 10px 30px var(--glass-shadow);
-        margin-top: 1rem;
-        animation: fadeIn 0.5s ease-out;
+    /* Results section styling - ensure everything is white */
+    .result-content h1, .result-content h2, .result-content h3, 
+    .result-content h4, .result-content h5, .result-content h6 {
+        color: white !important;
+        font-weight: 700 !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .result-content p, .result-content li, .result-content span, 
+    .result-content div, .result-content code, .result-content pre,
+    .result-content strong, .result-content b, .result-content em, 
+    .result-content i, .result-content a, .result-content blockquote,
+    .result-content td, .result-content th, .result-content tr,
+    .result-content caption, .result-content section, .result-content article {
+        color: white !important;
+        font-size: 1rem !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Ensure markdown formatting is displayed properly */
+    .result-content ul, .result-content ol {
+        margin-bottom: 1.5rem !important;
+        color: white !important;
+    }
+    
+    .result-content * {
+        color: white !important;
     }
     
     /* Footer cards styling */
@@ -645,9 +660,37 @@ with col2:
                 # Clean up
                 os.unlink(temp_pdf_path)
                 
-                st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-                st.image(images[0], width=300, caption="Resume Preview")
+                # Modern styling for the preview
+                st.markdown("""
+                <style>
+                .preview-container {
+                    margin-top: 20px;
+                    position: relative;
+                    overflow: hidden;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                    transition: all 0.3s ease;
+                }
+                .preview-container:hover {
+                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+                    transform: translateY(-5px);
+                }
+                .preview-title {
+                    text-align: center;
+                    margin-top: 15px;
+                    font-weight: 600;
+                    color: #3E64FF;
+                    font-size: 1.1rem;
+                    letter-spacing: 0.5px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Display preview with improved styling
+                st.markdown('<div class="preview-container">', unsafe_allow_html=True)
+                st.image(images[0], use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="preview-title">Resume Preview</div>', unsafe_allow_html=True)
                 
             except Exception as e:
                 st.warning("Could not display PDF preview. Using text mode for analysis.")
@@ -655,9 +698,24 @@ with col2:
                 uploaded_file.seek(0)
                 try:
                     text = extract_text_with_pypdf2(uploaded_file)
-                    st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-                    st.text_area("Resume Content Preview (First 500 chars)", text[:500] + "...", height=200, disabled=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown("""
+                    <style>
+                    .text-preview-container {
+                        background-color: rgba(30, 41, 59, 0.04);
+                        border-radius: 12px;
+                        padding: 20px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 14px;
+                        line-height: 1.5;
+                        color: #1e293b;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        border-left: 4px solid #3E64FF;
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f'<div class="text-preview-container">{text[:500]}...</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="preview-title">Resume Content Preview</div>', unsafe_allow_html=True)
                 except Exception as text_e:
                     st.warning(f"Could not generate text preview: {str(text_e)}")
         except Exception as e:
@@ -707,24 +765,24 @@ if submit1 or submit3:
                 uploaded_file.seek(0)
                 pdf_content = input_pdf_setup(uploaded_file)
                 
-                st.markdown('<div class="result-section">', unsafe_allow_html=True)
+                # Remove the result-section div wrapper
                 st.markdown('<div class="sub-header">Analysis Results</div>', unsafe_allow_html=True)
                 
-                # Display analysis mode (image or text)
+                # Display analysis mode (image or text) with better styling
                 if isinstance(pdf_content, dict) and 'text' in pdf_content:
-                    st.info("Using text-based analysis mode")
+                    st.markdown('<div style="background-color: rgba(49, 70, 101, 0.6); color: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; font-weight: 500; margin-bottom: 20px;">📄 Using text-based analysis mode</div>', unsafe_allow_html=True)
                 else:
-                    st.info("Using image-based analysis mode")
+                    st.markdown('<div style="background-color: rgba(49, 70, 101, 0.6); color: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; font-weight: 500; margin-bottom: 20px;">🖼️ Using image-based analysis mode</div>', unsafe_allow_html=True)
                 
                 if submit1:
                     response = get_gemini_response(input_prompt1, pdf_content, input_text)
-                    st.markdown("### Resume Evaluation")
+                    st.markdown("<h2 style='color: white; font-weight: 700;'>Resume Evaluation</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='result-content'>{response}</div>", unsafe_allow_html=True)
                 elif submit3:
                     response = get_gemini_response(input_prompt3, pdf_content, input_text)
-                    st.markdown("### Match Assessment")
+                    st.markdown("<h2 style='color: white; font-weight: 700;'>Match Assessment</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='result-content'>{response}</div>", unsafe_allow_html=True)
                 
-                st.markdown(response)
-                st.markdown('</div>', unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"An error occurred during analysis: {str(e)}")
                 st.error("If this issue persists, please try a different PDF file format or reach out for support.")
