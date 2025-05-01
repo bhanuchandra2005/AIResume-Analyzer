@@ -10,6 +10,8 @@ from PIL import Image
 import pdf2image
 import google.generativeai as genai
 import datetime
+import PyPDF2
+import tempfile
 
 # Page configuration
 st.set_page_config(
@@ -204,37 +206,60 @@ def get_gemini_response(input,pdf_content,prompt):
     response=model.generate_content([input,pdf_content[0],prompt])
     return response.text
 
+def extract_text_with_pypdf2(uploaded_file):
+    # Extract text from PDF using PyPDF2
+    pdf_reader = PyPDF2.PdfReader(uploaded_file)
+    text = ""
+    for page_num in range(len(pdf_reader.pages)):
+        text += pdf_reader.pages[page_num].extract_text()
+    return text
+
 def input_pdf_setup(uploaded_file):
     if uploaded_file is not None:
-        ## Convert the PDF to image
-        # Different handling for Windows vs Linux/Cloud environments
-        if platform.system() == "Windows":
-            # Windows-specific path
-            poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-            images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
-        else:
-            # For Linux/Cloud environments where poppler is installed globally
+        try:
+            ## First try with pdf2image and poppler
             try:
-                images = pdf2image.convert_from_bytes(uploaded_file.read())
+                # Different handling for Windows vs Linux/Cloud environments
+                if platform.system() == "Windows":
+                    # Windows-specific path
+                    poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+                    images = pdf2image.convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
+                else:
+                    # For Linux/Cloud environments where poppler is installed globally
+                    images = pdf2image.convert_from_bytes(uploaded_file.read())
+                
+                first_page = images[0]
+                
+                # Convert to bytes
+                img_byte_arr = io.BytesIO()
+                first_page.save(img_byte_arr, format='JPEG')
+                img_byte_arr = img_byte_arr.getvalue()
+                
+                pdf_parts = [
+                    {
+                        "mime_type": "image/jpeg",
+                        "data": base64.b64encode(img_byte_arr).decode()  # encode to base64
+                    }
+                ]
+                return pdf_parts
+            
             except Exception as e:
-                st.error(f"PDF conversion error: {str(e)}")
-                st.info("If running on Streamlit Cloud, make sure poppler-utils is installed")
-                raise
-
-        first_page=images[0]
-
-        # Convert to bytes
-        img_byte_arr = io.BytesIO()
-        first_page.save(img_byte_arr, format='JPEG')
-        img_byte_arr = img_byte_arr.getvalue()
-
-        pdf_parts = [
-            {
-                "mime_type": "image/jpeg",
-                "data": base64.b64encode(img_byte_arr).decode()  # encode to base64
-            }
-        ]
-        return pdf_parts
+                st.warning(f"PDF image conversion failed: {str(e)}. Using text extraction instead.")
+                # Fallback to text extraction
+                uploaded_file.seek(0)  # Reset file pointer
+                text = extract_text_with_pypdf2(uploaded_file)
+                
+                pdf_parts = [
+                    {
+                        "mime_type": "text/plain",
+                        "data": text
+                    }
+                ]
+                return pdf_parts
+                
+        except Exception as e:
+            st.error(f"PDF processing error: {str(e)}")
+            raise
     else:
         raise FileNotFoundError("No file uploaded")
 
@@ -279,17 +304,31 @@ with col2:
     if uploaded_file is not None:
         st.success("✅ Resume uploaded successfully!")
         try:
-            # Display a preview of the first page
-            if platform.system() == "Windows":
-                poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
-                images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
-            else:
-                # For Linux/Cloud environments
-                images = pdf2image.convert_from_bytes(uploaded_file.getvalue())
-                
-            st.markdown('<div class="preview-box">', unsafe_allow_html=True)
-            st.image(images[0], width=300, caption="Resume Preview")
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Try to display a preview
+            try:
+                if platform.system() == "Windows":
+                    poppler_path = r"C:\Program Files (x86)\poppler\Library\bin"
+                    images = pdf2image.convert_from_bytes(uploaded_file.getvalue(), poppler_path=poppler_path)
+                    st.markdown('<div class="preview-box">', unsafe_allow_html=True)
+                    st.image(images[0], width=300, caption="Resume Preview")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    # For Linux/Cloud environments
+                    images = pdf2image.convert_from_bytes(uploaded_file.getvalue())
+                    st.markdown('<div class="preview-box">', unsafe_allow_html=True)
+                    st.image(images[0], width=300, caption="Resume Preview")
+                    st.markdown('</div>', unsafe_allow_html=True)
+            except Exception as e:
+                st.warning("Could not display PDF preview. Using text mode for analysis.")
+                # Show a text preview instead
+                uploaded_file.seek(0)
+                try:
+                    text = extract_text_with_pypdf2(uploaded_file)
+                    st.markdown('<div class="preview-box">', unsafe_allow_html=True)
+                    st.text_area("Resume Content Preview (First 500 chars)", text[:500] + "...", height=200, disabled=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                except Exception as text_e:
+                    st.warning(f"Could not generate text preview: {str(text_e)}")
         except Exception as e:
             st.warning(f"Could not preview resume: {str(e)}")
 
@@ -333,6 +372,8 @@ if submit1 or submit3:
     else:
         with st.spinner("Analyzing your resume... This may take a few moments."):
             try:
+                # Reset file pointer to beginning
+                uploaded_file.seek(0)
                 pdf_content = input_pdf_setup(uploaded_file)
                 
                 st.markdown('<div class="result-section">', unsafe_allow_html=True)
