@@ -123,19 +123,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    .footer-links {
-        display: flex;
-        justify-content: center;
-        gap: 2rem;
-        margin-bottom: 1rem;
-    }
-    
-    .footer-link {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 500;
-    }
-    
     .footer-copyright {
         color: #A0AEC0;
         font-size: 0.8rem;
@@ -231,7 +218,7 @@ def input_pdf_setup(uploaded_file):
                 images = pdf2image.convert_from_bytes(uploaded_file.read())
             except Exception as e:
                 st.error(f"PDF conversion error: {str(e)}")
-                st.info("If running on Render, make sure to add poppler-utils in the build command: 'apt-get update && apt-get install -y poppler-utils'")
+                st.info("If running on Streamlit Cloud, make sure poppler-utils is installed")
                 raise
 
         first_page=images[0]
@@ -363,42 +350,9 @@ if submit1 or submit3:
             except Exception as e:
                 st.error(f"An error occurred during analysis: {str(e)}")
 
-# Enhanced footer section with team info
+# Simple footer
 st.markdown("<hr>", unsafe_allow_html=True)
-footer_container = st.container()
-with footer_container:
-    # App title and description
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<h3 style='text-align: center; color: #3E64FF; font-size: 1.2rem;'>Resume AI Analyzer</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #718096; font-size: 0.9rem;'>This tool uses advanced AI to analyze resumes against job descriptions and provide actionable feedback.</p>", unsafe_allow_html=True)
-    
-    # Mentor section - moved above team members
-    st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 20px; font-size: 1.1rem;'>PROJECT GUIDE</h4>", unsafe_allow_html=True)
-    
-    mentor_col1, mentor_col2, mentor_col3 = st.columns([1, 1, 1])
-    with mentor_col2:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>P. PRATHIBHA SWARAJ</p><p style='color: #718096; font-size: 0.8rem;'>ASSISTANT PROFESSOR</p></div>", unsafe_allow_html=True)
-    
-    # Team section - after mentor
-    st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 20px; font-size: 1.1rem;'>Team Members</h4>", unsafe_allow_html=True)
-    
-    team_cols = st.columns(3)
-    with team_cols[0]:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>BHANU CHANDRA MEGHARAJ</p><p style='color: #718096; font-size: 0.8rem;'>23241A3338</p></div>", unsafe_allow_html=True)
-    
-    with team_cols[1]:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>SRAKSHIN CHITYALA</p><p style='color: #718096; font-size: 0.8rem;'>23241A3321</p></div>", unsafe_allow_html=True)
-    
-    with team_cols[2]:
-        st.markdown("<div style='background-color: #E6F0FF; padding: 10px; border-radius: 8px; text-align: center; border-left: 4px solid #3E64FF;'><p style='font-weight: 600; color: #3E64FF; margin-bottom: 5px;'>AKSHAJ REDDY ADDANDI</p><p style='color: #718096; font-size: 0.8rem;'>23241A3303</p></div>", unsafe_allow_html=True)
-    
-    # Copyright - removed links section
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        current_year = datetime.datetime.now().year
-        st.markdown(f"<p style='text-align: center; color: #A0AEC0; font-size: 0.8rem;'>© {current_year} Resume AI Analyzer. All rights reserved.</p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #718096; font-size: 0.8rem;'>Powered by Google Gemini AI</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #A0AEC0; font-size: 0.8rem;'>© {datetime.datetime.now().year} Resume AI Analyzer. Powered by Google Gemini AI</p>", unsafe_allow_html=True)
 
 
 
