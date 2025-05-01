@@ -23,36 +23,68 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS with a lighter, more modern theme
+# Enhanced modern CSS with glassmorphism and subtle animations
 st.markdown("""
 <style>
-    /* Main theme colors */
+    /* Main theme colors - Enhanced palette */
     :root {
         --primary-color: #3E64FF;
+        --primary-light: #5A7DFF;
         --secondary-color: #5EDFFF;
         --accent-color: #FF9190;
         --text-color: #2D3748;
         --light-bg: #F9FAFE;
-        --card-bg: #FFFFFF;
-        --border-color: #E2E8F0;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --border-color: rgba(226, 232, 240, 0.8);
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --glass-shadow: rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Global styles and animations */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Remove custom background gradient to use default Streamlit background */
+    /* .stApp {
+        background: linear-gradient(135deg, #F5F7FF 0%, #F0FCFF 100%);
+    } */
+    
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes glowPulse {
+        0% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); }
+        50% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+        100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); }
     }
     
     /* Typography */
     .main-header {
-        font-size: 2.8rem;
+        font-size: 3.2rem;
         background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
         margin-bottom: 0.5rem;
         text-align: center;
+        letter-spacing: -0.02em;
+        animation: fadeIn 0.8s ease-out;
     }
     
     .tagline {
-        font-size: 1.2rem;
-        color: #718096;
+        font-size: 1.25rem;
+        color: #64748B;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
+        font-weight: 400;
+        animation: fadeIn 0.8s ease-out 0.2s both;
     }
     
     .sub-header {
@@ -60,9 +92,26 @@ st.markdown("""
         color: var(--primary-color);
         font-weight: 600;
         margin-top: 1rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid var(--border-color);
+    }
+    
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px var(--glass-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
     
     /* Buttons */
@@ -70,112 +119,87 @@ st.markdown("""
         background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        padding: 0.7rem 1.4rem;
         font-weight: 600;
-        box-shadow: 0 4px 6px rgba(62, 100, 255, 0.15);
+        box-shadow: 0 4px 10px rgba(62, 100, 255, 0.25);
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stButton > button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: 0.5s;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 10px rgba(62, 100, 255, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(79, 70, 229, 0.35);
     }
     
-    /* Cards and sections */
-    .upload-section {
-        background-color: var(--card-bg);
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        border: 1px solid var(--border-color);
+    .stButton > button:hover::before {
+        left: 100%;
     }
     
-    .result-section {
-        background-color: var(--card-bg);
-        padding: 2rem;
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    }
-    
-    /* Footer */
-    .footer {
-        margin-top: 4rem;
-        padding: 2rem 0;
-        background-color: var(--light-bg);
-        border-top: 1px solid var(--border-color);
-        text-align: center;
-    }
-    
-    .footer-content {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    
-    .footer-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: 1rem;
-    }
-    
-    .footer-text {
-        color: #718096;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-    
-    .footer-copyright {
-        color: #A0AEC0;
-        font-size: 0.8rem;
-    }
-    
-    /* Streamlit element customization */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 0;
-        max-width: 1200px;
-    }
-    
-    .stTextArea textarea {
-        border-radius: 8px;
-        border: 1px solid var(--border-color);
-    }
-    
-    /* Main page background */
-    .main {
-        background-color: var(--light-bg);
-    }
-    
-    /* Success message */
-    .stSuccess {
-        background-color: #E6FFFA;
-        color: #2C7A7B;
-        border: 1px solid #81E6D9;
-        border-radius: 8px;
-    }
-    
-    /* File uploader */
+    /* Improved file uploader */
     .stFileUploader {
-        border: 2px dashed var(--border-color);
-        border-radius: 8px;
-        padding: 1rem;
-        margin-top: 10px;
+        border: 2px dashed var(--primary-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 15px;
+        background-color: rgba(238, 242, 255, 0.5);
+        transition: all 0.3s ease;
     }
     
     .stFileUploader:hover {
         border-color: var(--primary-color);
+        background-color: rgba(238, 242, 255, 0.8);
     }
     
-    /* Info box */
+    /* Text area and input styling */
+    .stTextArea, .stTextInput {
+        transition: all 0.2s ease;
+    }
+    
+    .stTextArea:focus, .stTextInput:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+    
+    .stTextArea textarea, .stTextInput input {
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        padding: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Feature boxes with improved design */
     .feature-box {
-        background-color: #EBF4FF;
-        border-radius: 8px;
-        padding: 1.2rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid var(--primary-color);
+        background: linear-gradient(145deg, #EEF2FF, #E0F2FE);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.2rem;
+        border-left: 4px solid #4F46E5;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     }
     
     .feature-title {
@@ -185,12 +209,200 @@ st.markdown("""
         font-size: 1.1rem;
     }
     
-    /* Preview box */
+    /* Success message */
+    .stSuccess {
+        background-color: rgba(209, 250, 229, 0.9) !important;
+        color: #065F46 !important;
+        border: 1px solid rgba(110, 231, 183, 0.5) !important;
+        border-radius: 12px !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Info message */
+    .stInfo {
+        background-color: rgba(191, 219, 254, 0.8);
+        color: #1E40AF;
+        border: 1px solid rgba(147, 197, 253, 0.5);
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    
+    /* Warning message */
+    .stWarning {
+        background-color: rgba(254, 240, 138, 0.8);
+        color: #854D0E;
+        border: 1px solid rgba(252, 211, 77, 0.5);
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    
+    /* Error message */
+    .stError {
+        background-color: rgba(254, 205, 211, 0.8);
+        color: #9F1239;
+        border: 1px solid rgba(251, 113, 133, 0.5);
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    
+    /* Preview box with subtle shadow */
     .preview-box {
-        background-color: #F7FAFC;
-        border-radius: 8px;
-        padding: 1rem;
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 12px;
+        padding: 1.5rem;
         border: 1px solid var(--border-color);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.03);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+    }
+    
+    .preview-box:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Result section styling */
+    .result-section {
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 10px 30px var(--glass-shadow);
+        margin-top: 1rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    /* Footer cards styling */
+    .footer-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s ease;
+    }
+    
+    .footer-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Streamlit element customization */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1200px;
+    }
+    
+    /* Remove padding from main container edges */
+    .main .block-container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    /* Custom progress bar for spinner */
+    .stSpinner > div {
+        border-top-color: var(--primary-color) !important;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Team member cards hover effect */
+    .team-card {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .team-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-color) 100%);
+        opacity: 0;
+        z-index: -1;
+        transition: opacity 0.3s ease;
+        border-radius: 8px;
+    }
+    
+    .team-card:hover::before {
+        opacity: 0.03;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Animated border for feature cards */
+    @keyframes borderGlow {
+        0% { border-color: var(--primary-color); }
+        50% { border-color: var(--secondary-color); }
+        100% { border-color: var(--primary-color); }
+    }
+    
+    .animated-border {
+        animation: borderGlow 4s infinite;
+    }
+    
+    /* File uploader improvements for better visibility */
+    .stFileUploader > div > label {
+        color: #2D3748 !important;
+        font-weight: 500 !important;
+    }
+    
+    .stFileUploader > div > div > span {
+        color: #2D3748 !important;
+    }
+    
+    /* Improve visibility of success messages */
+    .stSuccess {
+        background-color: rgba(209, 250, 229, 0.9) !important;
+        color: #065F46 !important;
+        border: 1px solid rgba(110, 231, 183, 0.5) !important;
+        border-radius: 12px !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Make all UI text more visible */
+    .uploadedFileName, .stMarkdown p, .stFileUploader p {
+        color: #2D3748 !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Make labels and text inputs more visible */
+    label, .stTextInput, .stTextArea, .stSelectbox, div[data-baseweb="select"] span {
+        color: #2D3748 !important;
+        font-weight: 500 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -360,29 +572,29 @@ def input_pdf_setup(uploaded_file):
     else:
         raise FileNotFoundError("No file uploaded")
 
-# App header section
+# App header section with enhanced styling
 st.markdown('<div class="main-header">Resume AI Analyzer</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Powered by AI to help you land your dream job</div>', unsafe_allow_html=True)
 
-# Feature boxes with improved contrast
+# Enhanced feature boxes with hover effects and better contrast
 st.markdown("""
-<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-    <div style="background-color: #E6F0FF; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; border-left: 4px solid #3E64FF; flex: 1;">
-        <div style="font-weight: 600; color: #3E64FF; margin-bottom: 0.5rem; font-size: 1.1rem;">📊 ATS Compatibility</div>
-        <p style="color: #2D3748; font-size: 0.95rem; line-height: 1.5;">Check how well your resume aligns with job requirements and ATS systems</p>
+<div style="display: flex; gap: 1.2rem; margin-bottom: 2.5rem;">
+    <div class="feature-box animated-border" style="background: linear-gradient(145deg, #EEF2FF, #E0F7FF); border-left: 4px solid #3E64FF; flex: 1;">
+        <div class="feature-title">📊 ATS Compatibility</div>
+        <p style="color: #334155; font-size: 0.95rem; line-height: 1.6;">Check how well your resume aligns with job requirements and ATS systems</p>
     </div>
-    <div style="background-color: #FFF0F0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; border-left: 4px solid #FF6B6B; flex: 1;">
-        <div style="font-weight: 600; color: #FF6B6B; margin-bottom: 0.5rem; font-size: 1.1rem;">🎯 Skills Gap Analysis</div>
-        <p style="color: #2D3748; font-size: 0.95rem; line-height: 1.5;">Identify missing skills and keywords that could improve your chances</p>
+    <div class="feature-box animated-border" style="background: linear-gradient(145deg, #FFF1F2, #FFE4E6); border-left: 4px solid #FF9190; flex: 1;">
+        <div class="feature-title" style="color: #FF9190;">🎯 Skills Gap Analysis</div>
+        <p style="color: #334155; font-size: 0.95rem; line-height: 1.6;">Identify missing skills and keywords that could improve your chances</p>
     </div>
-    <div style="background-color: #F0F8FF; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; border-left: 4px solid #4CAF50; flex: 1;">
-        <div style="font-weight: 600; color: #4CAF50; margin-bottom: 0.5rem; font-size: 1.1rem;">✨ Expert Recommendations</div>
-        <p style="color: #2D3748; font-size: 0.95rem; line-height: 1.5;">Get personalized suggestions to enhance your resume for specific roles</p>
+    <div class="feature-box animated-border" style="background: linear-gradient(145deg, #ECFDF5, #D1FAE5); border-left: 4px solid #4CAF50; flex: 1;">
+        <div class="feature-title" style="color: #4CAF50;">✨ Expert Recommendations</div>
+        <p style="color: #334155; font-size: 0.95rem; line-height: 1.6;">Get personalized suggestions to enhance your resume for specific roles</p>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Create two columns for better layout
+# Create two columns for better layout with glass card styling
 col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
@@ -396,10 +608,14 @@ with col1:
 
 with col2:
     st.markdown('<div class="sub-header">Your Resume</div>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Upload your resume (PDF format)", type=["pdf"])
+    
+    # More visible file uploader label
+    st.markdown('<p style="font-weight: 600; color: #2D3748; margin-bottom: 8px;">Upload your resume (PDF format)</p>', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("", type=["pdf"])
     
     if uploaded_file is not None:
-        st.success("✅ Resume uploaded successfully!")
+        # More visible success message
+        st.markdown('<div style="background-color: rgba(209, 250, 229, 0.9); color: #065F46; padding: 10px; border-radius: 8px; font-weight: 500; margin: 10px 0;"><span>✅ Resume uploaded successfully!</span></div>', unsafe_allow_html=True)
         try:
             # Try to display a preview
             try:
@@ -447,7 +663,7 @@ with col2:
         except Exception as e:
             st.warning(f"Could not preview resume: {str(e)}")
 
-# Action buttons in a centered layout
+# Enhanced action buttons with gradient and animation
 st.markdown("<br>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -478,7 +694,7 @@ Evaluate the resume against the job description and provide:
 Format your response with clear sections and bullet points for readability.
 """
 
-# Results section
+# Results section with enhanced styling
 if submit1 or submit3:
     if not input_text.strip():
         st.error("⚠️ Please enter a job description before analyzing.")
@@ -513,9 +729,59 @@ if submit1 or submit3:
                 st.error(f"An error occurred during analysis: {str(e)}")
                 st.error("If this issue persists, please try a different PDF file format or reach out for support.")
 
-# Simple footer
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #A0AEC0; font-size: 0.8rem;'>© {datetime.datetime.now().year} Resume AI Analyzer. Powered by Google Gemini AI</p>", unsafe_allow_html=True)
+# Redesigned footer section with enhanced styling
+st.markdown("<hr style='margin-top: 3rem; margin-bottom: 2rem; opacity: 0.3;'>", unsafe_allow_html=True)
+
+# App description with animated fade-in
+st.markdown("<h3 style='text-align: center; color: #3E64FF; font-size: 1.8rem; margin-bottom: 1rem; font-weight: 600;'>Resume AI Analyzer</h3>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #64748B; font-size: 1rem; max-width: 700px; margin: 0 auto 2rem auto; line-height: 1.6;'>This tool uses advanced AI to analyze resumes against job descriptions and provide actionable feedback.</p>", unsafe_allow_html=True)
+
+# Project Guide with glassmorphism card
+st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 2rem; margin-bottom: 1.5rem; font-size: 1.2rem; letter-spacing: 0.05em; font-weight: 600;'>PROJECT GUIDE</h4>", unsafe_allow_html=True)
+
+guide_col1, guide_col2, guide_col3 = st.columns([1, 1, 1])
+with guide_col2:
+    st.markdown("""
+    <div class="footer-card team-card" style="text-align: center;">
+        <h4 style="color: #3E64FF; font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">P. PRATHIBHA SWARAJ</h4>
+        <p style="color: #64748B; font-size: 0.9rem; font-weight: 500;">ASSISTANT PROFESSOR</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Team section with enhanced cards
+st.markdown("<h4 style='text-align: center; color: #3E64FF; margin-top: 2.5rem; margin-bottom: 1.5rem; font-size: 1.2rem; letter-spacing: 0.05em; font-weight: 600;'>TEAM MEMBERS</h4>", unsafe_allow_html=True)
+
+team_cols = st.columns(3)
+with team_cols[0]:
+    st.markdown("""
+    <div class="footer-card team-card" style="text-align: center;">
+        <h4 style="color: #3E64FF; font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">BHANU CHANDRA MEGHARAJ</h4>
+        <p style="color: #64748B; font-size: 0.9rem; font-weight: 500;">23241A3338</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with team_cols[1]:
+    st.markdown("""
+    <div class="footer-card team-card" style="text-align: center;">
+        <h4 style="color: #3E64FF; font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">SRAKSHIN CHITYALA</h4>
+        <p style="color: #64748B; font-size: 0.9rem; font-weight: 500;">23241A3321</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with team_cols[2]:
+    st.markdown("""
+    <div class="footer-card team-card" style="text-align: center;">
+        <h4 style="color: #3E64FF; font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">AKSHAJ REDDY ADDANDI</h4>
+        <p style="color: #64748B; font-size: 0.9rem; font-weight: 500;">23241A3303</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Copyright with subtle animation
+st.markdown(f"""
+<p style='text-align: center; color: #94A3B8; font-size: 0.85rem; margin-top: 2.5rem; font-weight: 400;'>
+    © {datetime.datetime.now().year} Resume AI Analyzer. All rights reserved.
+</p>
+""", unsafe_allow_html=True)
 
 
 
